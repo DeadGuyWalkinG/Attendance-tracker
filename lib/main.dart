@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-void main() async{
-
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await Hive.openBox('subjectsBox');
@@ -31,153 +30,37 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   final Box subjectsBox = Hive.box('subjectsBox');
-  final List<Map<String, dynamic>> _subjects = []; // Stores subject data
 
-  // Adds a new subject with default attendance values
   void _addSubject(String subjectName) {
-  if (subjectName.trim().isEmpty) return;
+    if (subjectName.trim().isEmpty) return;
+    subjectsBox.put(subjectName, {'attended': 0, 'total': 0});
+    setState(() {});
+  }
 
-  subjectsBox.put(subjectName, {'attended': 0, 'total': 0});
-  setState(() {});
-}
-
-/*void _addSubject(String subjectName) {
-    if (subjectName.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Subject name cannot be empty!')),
-      );
-      return;
-    }
-
-    setState(() {
-      _subjects.add({'name': subjectName, 'attended': 0, 'total': 0});
-    });
-  }*/
-
-
-  // Removes a subject from the list
   void _removeSubject(String subjectName) {
-  subjectsBox.delete(subjectName);
-  setState(() {});
-}
-  /*void _removeSubject(String subjectName) {
-    setState(() {
-      _subjects.removeWhere((subject) => subject['name'] == subjectName);
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$subjectName has been removed!')),
-    );
-  }*/
-
-
-  // Marks attendance for a subject
- void _markAttendance(String subjectName, bool present) {
-  final subject = subjectsBox.get(subjectName);
-  subject['total'] = (subject['total'] as num).toInt() + 1;
-  if (present) {
-    subject['attended'] = (subject['attended'] as num).toInt() + 1;
+    subjectsBox.delete(subjectName);
+    setState(() {});
   }
-  subjectsBox.put(subjectName, subject);
-  setState(() {});
-}
 
-
-/*void _markAttendance(String subjectName, bool present) {
-    setState(() {
-      final subject =
-          _subjects.firstWhere((subject) => subject['name'] == subjectName);
-      subject['total'] += 1;
-      if (present) {
-        subject['attended'] += 1;
-      }
-    });
-  }*/
-
-
-  // Calculates the overall attendance percentage
-  double _calculateAttendancePercentage() {
-  if (subjectsBox.isEmpty) return 100.0;
-
-  int totalClasses = 0, totalAttended = 0;
-  for (var key in subjectsBox.keys) {
-  var subject = subjectsBox.get(key);
-  totalClasses += (subject['total'] as num).toInt();
-  totalAttended += (subject['attended'] as num).toInt();
-}
-  
-  return totalClasses == 0 ? 100.0 : (totalAttended / totalClasses) * 100;
-}
-  
-  /*double _calculateAttendancePercentage() {
-    if (_subjects.isEmpty) return 100.0;
-
-    int totalClasses = 0;
-    int totalAttended = 0;
-
-    for (var subject in _subjects) {
-      totalClasses += (subject['total'] as int);
-      totalAttended += (subject['attended'] as int);
+  void _markAttendance(String subjectName, bool present) {
+    final subject = subjectsBox.get(subjectName);
+    subject['total'] = (subject['total'] as num).toInt() + 1;
+    if (present) {
+      subject['attended'] = (subject['attended'] as num).toInt() + 1;
     }
-
-    return totalClasses == 0 ? 100.0 : (totalAttended / totalClasses) * 100;
-  }*/
-
-  // Displays a dialog to add a new subject
-  void _showAddSubjectDialog(BuildContext context) {
-    final TextEditingController _subjectController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Add Subject'),
-        content: TextField(
-          controller: _subjectController,
-          decoration: InputDecoration(hintText: 'Enter subject name'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (_subjectController.text.isNotEmpty) {
-                _addSubject(_subjectController.text.trim());
-              }
-              Navigator.of(ctx).pop();
-            },
-            child: Text('Add'),
-          ),
-        ],
-      ),
-    );
+    subjectsBox.put(subjectName, subject);
+    setState(() {});
   }
 
-  // Displays a dialog to mark attendance
-  void _showMarkAttendanceDialog(BuildContext context, String subjectName) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Mark Attendance for $subjectName'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _markAttendance(subjectName, false);
-              Navigator.of(ctx).pop();
-            },
-            child: Text('Absent'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _markAttendance(subjectName, true);
-              Navigator.of(ctx).pop();
-            },
-            child: Text('Present'),
-          ),
-        ],
-      ),
-    );
+  double _calculateAttendancePercentage() {
+    if (subjectsBox.isEmpty) return 100.0;
+    int totalClasses = 0, totalAttended = 0;
+    for (var key in subjectsBox.keys) {
+      var subject = subjectsBox.get(key);
+      totalClasses += (subject['total'] as num).toInt();
+      totalAttended += (subject['attended'] as num).toInt();
+    }
+    return totalClasses == 0 ? 100.0 : (totalAttended / totalClasses) * 100;
   }
 
   @override
@@ -194,7 +77,6 @@ class _DashboardPageState extends State<DashboardPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Dashboard Header
             Card(
               elevation: 5,
               shape: RoundedRectangleBorder(
@@ -206,16 +88,11 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Overall Attendance',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                      ),
+                    Text('Overall Attendance',
+                      style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
                     SizedBox(height: 8),
-                    Text(
-                      '${attendancePercentage.toStringAsFixed(1)}%',
+                    Text('${attendancePercentage.toStringAsFixed(1)}%',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -225,8 +102,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     if (attendancePercentage < 75)
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(
-                          '⚠️ Attendance is below 75%! Attend more classes.',
+                        child: Text('⚠️ Attendance is below 75%! Attend more classes.',
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -235,10 +111,8 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ),
             SizedBox(height: 20),
-
-            // Subject List
             Expanded(
-              child: _subjects.isEmpty
+              child: subjectsBox.isEmpty
                   ? Center(
                       child: Text(
                         'No subjects added yet! Use the "+" button to add subjects.',
@@ -247,32 +121,28 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     )
                   : ListView.builder(
-                      itemCount: _subjects.length,
+                      itemCount: subjectsBox.length,
                       itemBuilder: (context, index) {
-                        final subject = _subjects[index];
-                        final subjectAttendance = subject['total'] == 0
+                        final subjectName = subjectsBox.keyAt(index);
+                        final subject = subjectsBox.get(subjectName);
+                        final attendance = subject['total'] == 0
                             ? 100.0
                             : (subject['attended'] / subject['total']) * 100;
-
                         return Card(
                           margin: EdgeInsets.symmetric(vertical: 8),
                           child: ListTile(
-                            title: Text(subject['name']),
-                            subtitle: Text(
-                                'Attendance: ${subject['attended']}/${subject['total']} (${subjectAttendance.toStringAsFixed(1)}%)'),
+                            title: Text(subjectName),
+                            subtitle: Text('Attendance: ${subject['attended']}/${subject['total']} (${attendance.toStringAsFixed(1)}%)'),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
                                   icon: Icon(Icons.edit, color: Colors.blue),
-                                  onPressed: () => _showMarkAttendanceDialog(
-                                      context, subject['name']),
+                                  onPressed: () => _markAttendance(subjectName, true),
                                 ),
                                 IconButton(
                                   icon: Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () {
-                                    _removeSubject(subject['name']);
-                                  },
+                                  onPressed: () => _removeSubject(subjectName),
                                 ),
                               ],
                             ),
@@ -285,7 +155,34 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddSubjectDialog(context),
+        onPressed: () {
+          TextEditingController _subjectController = TextEditingController();
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: Text('Add Subject'),
+              content: TextField(
+                controller: _subjectController,
+                decoration: InputDecoration(hintText: 'Enter subject name'),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_subjectController.text.isNotEmpty) {
+                      _addSubject(_subjectController.text.trim());
+                    }
+                    Navigator.of(ctx).pop();
+                  },
+                  child: Text('Add'),
+                ),
+              ],
+            ),
+          );
+        },
         child: Icon(Icons.add),
       ),
     );
