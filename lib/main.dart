@@ -76,14 +76,14 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   double _calculateAttendancePercentage() {
-    if (subjectsBox.isEmpty) return 100.0;
+    if (subjectsBox.isEmpty) return 0.0;
     int totalClasses = 0, totalAttended = 0;
     for (var key in subjectsBox.keys) {
       var subject = subjectsBox.get(key);
       totalClasses += (subject['total'] as num).toInt();
       totalAttended += (subject['attended'] as num).toInt();
     }
-    return totalClasses == 0 ? 100.0 : (totalAttended / totalClasses) * 100;
+    return totalClasses == 0 ? 0.0 : (totalAttended / totalClasses) * 100;
   }
 
   @override
@@ -149,23 +149,39 @@ class _DashboardPageState extends State<DashboardPage> {
                         final subjectName = subjectsBox.keyAt(index);
                         final subject = subjectsBox.get(subjectName);
                         final attendance = subject['total'] == 0
-                            ? 100.0
+                            ? 0.0
                             : (subject['attended'] / subject['total']) * 100;
                         return Card(
                           margin: EdgeInsets.symmetric(vertical: 8),
-                          child: ListTile(
-                            title: Text(subjectName),
-                            subtitle: Text('Attendance: ${subject['attended']}/${subject['total']} (${attendance.toStringAsFixed(1)}%)'),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                IconButton(
-                                  icon: Icon(Icons.edit, color: Colors.blue),
-                                  onPressed: () => _showMarkAttendanceDialog(context, subjectName),
+                                Text(subjectName, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                SizedBox(height: 8),
+                                LinearProgressIndicator(
+                                  value: attendance / 100,
+                                  backgroundColor: Colors.grey.shade300,
+                                  color: attendance < 75 ? Colors.redAccent : Colors.green,
+                                  minHeight: 10,
                                 ),
-                                IconButton(
-                                  icon: Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () => _removeSubject(subjectName),
+                                SizedBox(height: 8),
+                                Text('Attendance: ${subject['attended']}/${subject['total']} (${attendance.toStringAsFixed(1)}%)'),
+                                if (attendance < 75)
+                                  Text('⚠️ Below 75%! Attend more.', style: TextStyle(color: Colors.red)),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(Icons.edit, color: Colors.blue),
+                                      onPressed: () => _showMarkAttendanceDialog(context, subjectName),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () => _removeSubject(subjectName),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -189,15 +205,10 @@ class _DashboardPageState extends State<DashboardPage> {
                 decoration: InputDecoration(hintText: 'Enter subject name'),
               ),
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text('Cancel'),
-                ),
+                TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text('Cancel')),
                 ElevatedButton(
                   onPressed: () {
-                    if (_subjectController.text.isNotEmpty) {
-                      _addSubject(_subjectController.text.trim());
-                    }
+                    if (_subjectController.text.isNotEmpty) _addSubject(_subjectController.text.trim());
                     Navigator.of(ctx).pop();
                   },
                   child: Text('Add'),
