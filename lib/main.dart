@@ -72,14 +72,16 @@ class _DashboardPageState extends State<DashboardPage> {
 
 
   // Marks attendance for a subject
-  void _markAttendance(String subjectName, bool present) {
+ void _markAttendance(String subjectName, bool present) {
   final subject = subjectsBox.get(subjectName);
-  subject['total'] += 1;
-  if (present) subject['attended'] += 1;
-
+  subject['total'] = (subject['total'] as num).toInt() + 1;
+  if (present) {
+    subject['attended'] = (subject['attended'] as num).toInt() + 1;
+  }
   subjectsBox.put(subjectName, subject);
   setState(() {});
 }
+
 
 /*void _markAttendance(String subjectName, bool present) {
     setState(() {
@@ -99,14 +101,13 @@ class _DashboardPageState extends State<DashboardPage> {
 
   int totalClasses = 0, totalAttended = 0;
   for (var key in subjectsBox.keys) {
-    var subject = subjectsBox.get(key);
-    totalClasses += subject['total'];
-    totalAttended += subject['attended'];
-  }
+  var subject = subjectsBox.get(key);
+  totalClasses += (subject['total'] as num).toInt();
+  totalAttended += (subject['attended'] as num).toInt();
+}
   
   return totalClasses == 0 ? 100.0 : (totalAttended / totalClasses) * 100;
 }
-
   
   /*double _calculateAttendancePercentage() {
     if (_subjects.isEmpty) return 100.0;
