@@ -45,11 +45,34 @@ class _DashboardPageState extends State<DashboardPage> {
   void _markAttendance(String subjectName, bool present) {
     final subject = subjectsBox.get(subjectName);
     subject['total'] = (subject['total'] as num).toInt() + 1;
-    if (present) {
-      subject['attended'] = (subject['attended'] as num).toInt() + 1;
-    }
+    if (present) subject['attended'] = (subject['attended'] as num).toInt() + 1;
     subjectsBox.put(subjectName, subject);
     setState(() {});
+  }
+
+  void _showMarkAttendanceDialog(BuildContext context, String subjectName) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Mark Attendance for $subjectName'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              _markAttendance(subjectName, false);
+              Navigator.of(ctx).pop();
+            },
+            child: Text('Absent'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _markAttendance(subjectName, true);
+              Navigator.of(ctx).pop();
+            },
+            child: Text('Present'),
+          ),
+        ],
+      ),
+    );
   }
 
   double _calculateAttendancePercentage() {
@@ -138,7 +161,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               children: [
                                 IconButton(
                                   icon: Icon(Icons.edit, color: Colors.blue),
-                                  onPressed: () => _markAttendance(subjectName, true),
+                                  onPressed: () => _showMarkAttendanceDialog(context, subjectName),
                                 ),
                                 IconButton(
                                   icon: Icon(Icons.delete, color: Colors.red),
