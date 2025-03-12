@@ -30,10 +30,18 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  final Box subjectsBox = Hive.box('subjectsBox');
   final List<Map<String, dynamic>> _subjects = []; // Stores subject data
 
   // Adds a new subject with default attendance values
   void _addSubject(String subjectName) {
+  if (subjectName.trim().isEmpty) return;
+
+  subjectsBox.put(subjectName, {'attended': 0, 'total': 0});
+  setState(() {});
+}
+
+/*void _addSubject(String subjectName) {
     if (subjectName.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Subject name cannot be empty!')),
@@ -44,10 +52,15 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() {
       _subjects.add({'name': subjectName, 'attended': 0, 'total': 0});
     });
-  }
+  }*/
+
 
   // Removes a subject from the list
   void _removeSubject(String subjectName) {
+  subjectsBox.delete(subjectName);
+  setState(() {});
+}
+  /*void _removeSubject(String subjectName) {
     setState(() {
       _subjects.removeWhere((subject) => subject['name'] == subjectName);
     });
@@ -55,10 +68,20 @@ class _DashboardPageState extends State<DashboardPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$subjectName has been removed!')),
     );
-  }
+  }*/
+
 
   // Marks attendance for a subject
   void _markAttendance(String subjectName, bool present) {
+  final subject = subjectsBox.get(subjectName);
+  subject['total'] += 1;
+  if (present) subject['attended'] += 1;
+
+  subjectsBox.put(subjectName, subject);
+  setState(() {});
+}
+
+/*void _markAttendance(String subjectName, bool present) {
     setState(() {
       final subject =
           _subjects.firstWhere((subject) => subject['name'] == subjectName);
@@ -67,10 +90,25 @@ class _DashboardPageState extends State<DashboardPage> {
         subject['attended'] += 1;
       }
     });
-  }
+  }*/
+
 
   // Calculates the overall attendance percentage
   double _calculateAttendancePercentage() {
+  if (subjectsBox.isEmpty) return 100.0;
+
+  int totalClasses = 0, totalAttended = 0;
+  for (var key in subjectsBox.keys) {
+    var subject = subjectsBox.get(key);
+    totalClasses += subject['total'];
+    totalAttended += subject['attended'];
+  }
+  
+  return totalClasses == 0 ? 100.0 : (totalAttended / totalClasses) * 100;
+}
+
+  
+  /*double _calculateAttendancePercentage() {
     if (_subjects.isEmpty) return 100.0;
 
     int totalClasses = 0;
@@ -82,7 +120,7 @@ class _DashboardPageState extends State<DashboardPage> {
     }
 
     return totalClasses == 0 ? 100.0 : (totalAttended / totalClasses) * 100;
-  }
+  }*/
 
   // Displays a dialog to add a new subject
   void _showAddSubjectDialog(BuildContext context) {
